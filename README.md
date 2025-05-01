@@ -6,10 +6,16 @@ This repository will contain all the code for the oci_langraph package. A set of
 * integration with OCI APM
 * ...
 
-## Debugging
-You can run in DEBUG mode setting the environment variable
+## Examples
+You can find examplesin the directory
+[examples](./examples/)
 
+## Debugging
+You can run in DEBUG mode setting the environment variable:
+```
 DEBUG=True
+```
+
 
 
 
