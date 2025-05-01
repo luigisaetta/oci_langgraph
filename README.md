@@ -7,7 +7,7 @@ This repository will contain all the code for the oci_langraph package. A set of
 * ...
 
 ## Examples
-You can find examplesin the directory
+You can find examples in the directory:
 [examples](./examples/)
 
 ## Debugging
