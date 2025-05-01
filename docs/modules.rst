@@ -1,7 +1,8 @@
 oci_langgraph
 =============
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: oci_langgraph
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-   oci_langgraph
