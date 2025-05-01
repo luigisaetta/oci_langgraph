@@ -1,0 +1,40 @@
+Metadata-Version: 2.4
+Name: oci_langgraph
+Version: 0.1.1
+Summary: A set of utility classes to enhance AI agent development with LangGraph and OCI
+Home-page: https://github.com/luigisaetta/oci_langgraph
+Author: L. Saetta
+Author-email: "L. Saetta" <luigi.saetta@gmail.com>
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: langchain>=0.3.24
+Requires-Dist: langchain-community>=0.3.23
+Requires-Dist: langgraph>=0.4.1
+Requires-Dist: oci>=2.150.3
+Requires-Dist: oracledb>=3.1.0
+Dynamic: license-file
+
+# OCI LangGraph
+This repository will contain all the code for the oci_langraph package
+
+## Features available
+* checkpointing
+* integration with OCI APM
+* ...
+
+## Debugging
+You can run in DEBUG mode setting the environment variable
+
+DEBUG=True
+
+
+
+

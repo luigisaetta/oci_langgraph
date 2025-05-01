@@ -16,6 +16,7 @@ Updates:
 - (19/04/2025) added connection pooling to improve performance.
 - (19/04/2025) added creation of the table if it doesn't exist.
 """
+
 import os
 import json
 import uuid
@@ -32,7 +33,7 @@ from langgraph.checkpoint.base import (
 import oracledb
 from .utils import get_console_logger
 
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 logger = get_console_logger()
 
@@ -53,15 +54,19 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
         cursor (oracledb.Cursor): Cursor object for executing SQL statements.
     """
 
-    def __init__(self, connect_args, min_connections=1, max_connections=5):
+    def __init__(
+        self, connect_args, min_connections=1, max_connections=5, table_name=TABLE_NAME
+    ):
         """
         Initializes the OracleCheckpointSaver with a connection pool
 
         Args:
             connect_args: Dictionary containing connection parameters
-                for the Oracle Database (e.g., user, password, dsn).
+                for the Oracle Database (e.g., user, password, dsn,
+                wallet_dir).
             min_connections: Minimum number of connections in the pool
             max_connections: Maximum number of connections in the pool
+            table_name: Name of the table to store checkpoints
         """
         super().__init__()
         self.pool = None
@@ -73,7 +78,10 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
             self._ensure_tables_exist()
         except oracledb.DatabaseError as e:
             logger.error("Error initializing connection pool: %s", e)
-            raise RuntimeError(f"Failed to initialize Oracle connection pool: {e}")
+            raise RuntimeError(f"Failed to initialize Oracle connection pool: {e}") from e
+
+        # the name of the table for the checkpoints
+        self.table_name = table_name.upper()
 
     def __del__(self):
         """Clean up resources when the object is destroyed"""
@@ -90,13 +98,13 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
                 # Check if checkpoints table exists
                 cursor.execute(
                     "SELECT COUNT(*) FROM user_tables WHERE table_name = :name",
-                    {"name": TABLE_NAME},
+                    {"name": self.table_name},
                 )
                 if cursor.fetchone()[0] == 0:
                     # Create the checkpoints table if it doesn't exist
                     cursor.execute(
                         f"""
-                        CREATE TABLE {TABLE_NAME} (
+                        CREATE TABLE {self.table_name} (
                             thread_id VARCHAR2(64) NOT NULL,
                             checkpoint_id VARCHAR2(64) NOT NULL,
                             state JSON,
@@ -153,7 +161,7 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
         metadata_json = json.dumps(metadata)
 
         update_sql = f"""
-            UPDATE {TABLE_NAME}
+            UPDATE {self.table_name}
             SET state = :state, metadata = :metadata
             WHERE thread_id = :thread_id AND checkpoint_id = :checkpoint_id
         """
@@ -175,7 +183,7 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
 
                 if cursor.rowcount == 0:
                     insert_sql = f"""
-                        INSERT INTO {TABLE_NAME} (thread_id, checkpoint_id, state, metadata, created_at)
+                        INSERT INTO {self.table_name} (thread_id, checkpoint_id, state, metadata, created_at)
                         VALUES (:thread_id, :checkpoint_id, :state, :metadata, CURRENT_TIMESTAMP)
                     """
                     cursor.execute(
@@ -239,7 +247,7 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
                 if checkpoint_id:
                     select_sql = f"""
                         SELECT state, metadata
-                        FROM {TABLE_NAME}
+                        FROM {self.table_name}
                         WHERE thread_id = :thread_id AND checkpoint_id = :checkpoint_id
                     """
                     cursor.execute(
@@ -250,7 +258,7 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
                     # get the last checkpoint for this thread_id
                     select_sql = f"""
                         SELECT state, metadata
-                        FROM {TABLE_NAME}
+                        FROM {self.table_name}
                         WHERE thread_id = :thread_id
                         ORDER BY created_at DESC FETCH FIRST 1 ROWS ONLY
                     """
@@ -313,7 +321,7 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
 
         base_sql = f"""
             SELECT state, metadata
-            FROM {TABLE_NAME}
+            FROM {self.table_name}
             WHERE thread_id = :thread_id
         """
 

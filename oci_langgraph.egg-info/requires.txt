@@ -1,0 +1,5 @@
+langchain>=0.3.24
+langchain-community>=0.3.23
+langgraph>=0.4.1
+oci>=2.150.3
+oracledb>=3.1.0
