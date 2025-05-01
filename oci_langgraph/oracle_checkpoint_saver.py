@@ -10,11 +10,13 @@ in an Oracle Database using the oracledb driver.
 It is an implementation of:
     https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint
 
+License: Mit
+
 Updates:
 - (19/04/2025) added connection pooling to improve performance.
 - (19/04/2025) added creation of the table if it doesn't exist.
 """
-
+import os
 import json
 import uuid
 from typing import Any, Dict, Iterator, Optional, AsyncIterator, Sequence, Tuple
@@ -28,11 +30,9 @@ from langgraph.checkpoint.base import (
     ChannelVersions,
 )
 import oracledb
-from utils import get_console_logger
-from config import DEBUG
+from .utils import get_console_logger
 
-# for connection to DB
-from config_private import CONNECT_ARGS
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 logger = get_console_logger()
 
@@ -53,11 +53,13 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
         cursor (oracledb.Cursor): Cursor object for executing SQL statements.
     """
 
-    def __init__(self, min_connections=1, max_connections=5):
+    def __init__(self, connect_args, min_connections=1, max_connections=5):
         """
         Initializes the OracleCheckpointSaver with a connection pool
 
         Args:
+            connect_args: Dictionary containing connection parameters
+                for the Oracle Database (e.g., user, password, dsn).
             min_connections: Minimum number of connections in the pool
             max_connections: Maximum number of connections in the pool
         """
@@ -65,7 +67,7 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
         self.pool = None
         try:
             self.pool = oracledb.create_pool(
-                min=min_connections, max=max_connections, **CONNECT_ARGS
+                min=min_connections, max=max_connections, **connect_args
             )
             # ensure the tables exist
             self._ensure_tables_exist()
