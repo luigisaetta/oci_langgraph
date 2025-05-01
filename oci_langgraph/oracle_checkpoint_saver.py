@@ -78,7 +78,9 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
             self._ensure_tables_exist()
         except oracledb.DatabaseError as e:
             logger.error("Error initializing connection pool: %s", e)
-            raise RuntimeError(f"Failed to initialize Oracle connection pool: {e}") from e
+            raise RuntimeError(
+                f"Failed to initialize Oracle connection pool: {e}"
+            ) from e
 
         # the name of the table for the checkpoints
         self.table_name = table_name.upper()

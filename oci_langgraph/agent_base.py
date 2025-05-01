@@ -49,6 +49,7 @@ class AgentBase(Runnable, ABC):
         """
 
         # this way you get automatically integration with OCI APM
+        # to enable you need to configure it
         with zipkin_span(service_name=self.agent_name, span_name=self.name):
             return self.handle_invoke(input, config, **kwargs)
 
