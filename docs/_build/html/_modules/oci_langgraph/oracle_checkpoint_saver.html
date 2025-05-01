@@ -1,0 +1,570 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oci_langgraph.oracle_checkpoint_saver &mdash; oci_langgraph 0.1.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fd825880"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            oci_langgraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">oci_langgraph</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">oci_langgraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">oci_langgraph.oracle_checkpoint_saver</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for oci_langgraph.oracle_checkpoint_saver</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">oracle_checkpoint_saver.py</span>
+
+<span class="sd">Author: L. Saetta</span>
+
+<span class="sd">This module provides the OracleCheckpointSaver class, which implements</span>
+<span class="sd">LangGraph&#39;s BaseCheckpointSaver interface to persist workflow state</span>
+<span class="sd">in an Oracle Database using the oracledb driver.</span>
+
+<span class="sd">It is an implementation of:</span>
+<span class="sd">    https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint</span>
+
+<span class="sd">License: Mit</span>
+
+<span class="sd">Updates:</span>
+<span class="sd">- (19/04/2025) added connection pooling to improve performance.</span>
+<span class="sd">- (19/04/2025) added creation of the table if it doesn&#39;t exist.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">AsyncIterator</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.checkpoint.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseCheckpointSaver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.checkpoint.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Checkpoint</span><span class="p">,</span>
+    <span class="n">CheckpointMetadata</span><span class="p">,</span>
+    <span class="n">CheckpointTuple</span><span class="p">,</span>
+    <span class="n">RunnableConfig</span><span class="p">,</span>
+    <span class="n">ChannelVersions</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">oracledb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_console_logger</span>
+
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_console_logger</span><span class="p">()</span>
+
+<span class="c1"># the name of the Oracle DB table</span>
+<span class="n">TABLE_NAME</span> <span class="o">=</span> <span class="s2">&quot;OCI_LANGGRAPH_CHECKPOINTS&quot;</span>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OracleCheckpointSaver</span><span class="p">(</span><span class="n">BaseCheckpointSaver</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A checkpoint saver that persists LangGraph workflow state to an</span>
+<span class="sd">    Oracle Database.</span>
+
+<span class="sd">    This class manages the insertion, updating, retrieval, and listing</span>
+<span class="sd">    of checkpoints identified by thread_id and checkpoint_id.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        connection (oracledb.Connection): Active connection to the Oracle Database.</span>
+<span class="sd">        cursor (oracledb.Cursor): Cursor object for executing SQL statements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">connect_args</span><span class="p">,</span> <span class="n">min_connections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_connections</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="n">TABLE_NAME</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the OracleCheckpointSaver with a connection pool</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            connect_args: Dictionary containing connection parameters</span>
+<span class="sd">                for the Oracle Database (e.g., user, password, dsn,</span>
+<span class="sd">                wallet_dir).</span>
+<span class="sd">            min_connections: Minimum number of connections in the pool</span>
+<span class="sd">            max_connections: Maximum number of connections in the pool</span>
+<span class="sd">            table_name: Name of the table to store checkpoints</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># the name of the table for the checkpoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_name</span> <span class="o">=</span> <span class="n">table_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">oracledb</span><span class="o">.</span><span class="n">create_pool</span><span class="p">(</span>
+                <span class="nb">min</span><span class="o">=</span><span class="n">min_connections</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">max_connections</span><span class="p">,</span> <span class="o">**</span><span class="n">connect_args</span>
+            <span class="p">)</span>
+            <span class="c1"># ensure the tables exist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_tables_exist</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">oracledb</span><span class="o">.</span><span class="n">DatabaseError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error initializing connection pool: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to initialize Oracle connection pool: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean up resources when the object is destroyed&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error closing connection pool: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_tables_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensures the required tables exist in the database&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="c1"># Check if checkpoints table exists</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="s2">&quot;SELECT COUNT(*) FROM user_tables WHERE table_name = :name&quot;</span><span class="p">,</span>
+                    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">},</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># Create the checkpoints table if it doesn&#39;t exist</span>
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        CREATE TABLE </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> (</span>
+<span class="s2">                            thread_id VARCHAR2(64) NOT NULL,</span>
+<span class="s2">                            checkpoint_id VARCHAR2(64) NOT NULL,</span>
+<span class="s2">                            state JSON,</span>
+<span class="s2">                            metadata JSON,</span>
+<span class="s2">                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,</span>
+<span class="s2">                            PRIMARY KEY (thread_id, checkpoint_id)</span>
+<span class="s2">                        )</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_decimals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recursively converts Decimal values in dicts/lists to int or float.</span>
+
+<span class="sd">        We need it because the sql query fro number in Oracle returns decimals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_decimals</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_decimals</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="OracleCheckpointSaver.put">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">RunnableConfig</span><span class="p">,</span>
+        <span class="n">checkpoint</span><span class="p">:</span> <span class="n">Checkpoint</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="p">:</span> <span class="n">CheckpointMetadata</span><span class="p">,</span>
+        <span class="n">new_versions</span><span class="p">:</span> <span class="n">ChannelVersions</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunnableConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts a new checkpoint or updates an existing one in the database.</span>
+<span class="sd">        Uses created_at to track the order of checkpoints.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OracleCheckpointSaver: called put...&quot;</span><span class="p">)</span>
+
+        <span class="n">thread_id</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configurable&quot;</span><span class="p">][</span><span class="s2">&quot;thread_id&quot;</span><span class="p">]</span>
+        <span class="n">checkpoint_id</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configurable&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checkpoint_id&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">checkpoint_id</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Missing checkpoint_id in put(); generating fallback UUID.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">checkpoint_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;configurable&quot;</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">&quot;checkpoint_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">checkpoint_id</span>
+
+        <span class="n">state_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+        <span class="n">metadata_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+
+        <span class="n">update_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            UPDATE </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">            SET state = :state, metadata = :metadata</span>
+<span class="s2">            WHERE thread_id = :thread_id AND checkpoint_id = :checkpoint_id</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">setinputsizes</span><span class="p">(</span>
+                    <span class="n">state</span><span class="o">=</span><span class="n">oracledb</span><span class="o">.</span><span class="n">DB_TYPE_JSON</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">oracledb</span><span class="o">.</span><span class="n">DB_TYPE_JSON</span>
+                <span class="p">)</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="n">update_sql</span><span class="p">,</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">state_json</span><span class="p">,</span>
+                        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">metadata_json</span><span class="p">,</span>
+                        <span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">thread_id</span><span class="p">,</span>
+                        <span class="s2">&quot;checkpoint_id&quot;</span><span class="p">:</span> <span class="n">checkpoint_id</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">insert_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        INSERT INTO </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> (thread_id, checkpoint_id, state, metadata, created_at)</span>
+<span class="s2">                        VALUES (:thread_id, :checkpoint_id, :state, :metadata, CURRENT_TIMESTAMP)</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                        <span class="n">insert_sql</span><span class="p">,</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">thread_id</span><span class="p">,</span>
+                            <span class="s2">&quot;checkpoint_id&quot;</span><span class="p">:</span> <span class="n">checkpoint_id</span><span class="p">,</span>
+                            <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">state_json</span><span class="p">,</span>
+                            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">metadata_json</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Saving checkpoint ID </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">checkpoint_id</span><span class="p">,</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">config</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.put_writes">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put_writes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">put_writes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">RunnableConfig</span><span class="p">,</span>
+        <span class="n">writes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">task_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores intermediate writes linked to a checkpoint.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.</span>
+<span class="sd">            writes (Sequence[Tuple[str, Any]]): List of writes to store.</span>
+<span class="sd">            task_id (str): Identifier for the task creating the writes.</span>
+<span class="sd">            task_path (str, optional): Path of the task creating the writes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO Implement logic to store intermediate writes if necessary</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OracleCheckpointSaver, called put_writes...&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.get_tuple">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.get_tuple">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">RunnableConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CheckpointTuple</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the most recent or specified checkpoint for a given thread.</span>
+
+<span class="sd">        If `checkpoint_id` is provided, retrieves that specific checkpoint.</span>
+<span class="sd">        Otherwise, selects the most recent checkpoint based on created_at.</span>
+
+<span class="sd">        All Decimal values are converted to native int or float.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OracleCheckpointSaver: called get_tuple...&quot;</span><span class="p">)</span>
+
+        <span class="n">thread_id</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configurable&quot;</span><span class="p">][</span><span class="s2">&quot;thread_id&quot;</span><span class="p">]</span>
+        <span class="n">checkpoint_id</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configurable&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checkpoint_id&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">checkpoint_id</span><span class="p">:</span>
+                    <span class="n">select_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        SELECT state, metadata</span>
+<span class="s2">                        FROM </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">                        WHERE thread_id = :thread_id AND checkpoint_id = :checkpoint_id</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                        <span class="n">select_sql</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">thread_id</span><span class="p">,</span> <span class="s2">&quot;checkpoint_id&quot;</span><span class="p">:</span> <span class="n">checkpoint_id</span><span class="p">},</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># get the last checkpoint for this thread_id</span>
+                    <span class="n">select_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        SELECT state, metadata</span>
+<span class="s2">                        FROM </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">                        WHERE thread_id = :thread_id</span>
+<span class="s2">                        ORDER BY created_at DESC FETCH FIRST 1 ROWS ONLY</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">thread_id</span><span class="p">})</span>
+
+                <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">row</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Checkpoint row found!&quot;</span><span class="p">)</span>
+                    <span class="n">state_raw</span><span class="p">,</span> <span class="n">metadata_raw</span> <span class="o">=</span> <span class="n">row</span>
+                    <span class="n">state</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state_raw</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state_raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="n">state_raw</span>
+                    <span class="p">)</span>
+                    <span class="n">metadata</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="n">metadata_raw</span>
+                    <span class="p">)</span>
+
+                    <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_decimals</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                    <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_decimals</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s2">&quot;Returning checkpoint ID: </span><span class="si">%s</span><span class="s2"> with channel_versions: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span>
+                            <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;channel_versions&quot;</span><span class="p">),</span>
+                        <span class="p">)</span>
+
+                    <span class="k">return</span> <span class="n">CheckpointTuple</span><span class="p">(</span>
+                        <span class="n">checkpoint</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span>
+                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No checkpoint row found — will restart from scratch!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.list">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunnableConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunnableConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">CheckpointTuple</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lists checkpoints for a given thread_id, ordered by created_at descending.</span>
+<span class="sd">        All Decimal values in state/metadata are converted to int/float.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: Configuration that may contain thread_id.</span>
+<span class="sd">            filter: Not used.</span>
+<span class="sd">            before: Optional checkpoint_id to filter out newer ones.</span>
+<span class="sd">            limit: Optional number of records to return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">thread_id</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configurable&quot;</span><span class="p">][</span><span class="s2">&quot;thread_id&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">config</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">thread_id</span><span class="p">}</span>
+
+        <span class="n">base_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT state, metadata</span>
+<span class="s2">            FROM </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">            WHERE thread_id = :thread_id</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">before</span><span class="p">:</span>
+            <span class="n">before_id</span> <span class="o">=</span> <span class="n">before</span><span class="p">[</span><span class="s2">&quot;configurable&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checkpoint_id&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">before_id</span><span class="p">:</span>
+                <span class="n">base_sql</span> <span class="o">+=</span> <span class="s2">&quot; AND checkpoint_id &lt; :before_id&quot;</span>
+                <span class="n">params</span><span class="p">[</span><span class="s2">&quot;before_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">before_id</span>
+
+        <span class="c1"># checkpoints are returned in reverse order of creation</span>
+        <span class="n">base_sql</span> <span class="o">+=</span> <span class="s2">&quot; ORDER BY created_at DESC&quot;</span>
+
+        <span class="k">if</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="n">base_sql</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; FETCH FIRST </span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2"> ROWS ONLY&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">base_sql</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span>
+                    <span class="n">state_raw</span><span class="p">,</span> <span class="n">metadata_raw</span> <span class="o">=</span> <span class="n">row</span>
+                    <span class="n">state</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state_raw</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state_raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="n">state_raw</span>
+                    <span class="p">)</span>
+                    <span class="n">metadata</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="n">metadata_raw</span>
+                    <span class="p">)</span>
+
+                    <span class="k">yield</span> <span class="n">CheckpointTuple</span><span class="p">(</span>
+                        <span class="n">checkpoint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_decimals</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
+                        <span class="n">metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_decimals</span><span class="p">(</span><span class="n">metadata</span><span class="p">),</span>
+                        <span class="n">config</span><span class="o">=</span><span class="n">config</span> <span class="ow">or</span> <span class="p">{},</span>
+                    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.aput">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">aput</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">RunnableConfig</span><span class="p">,</span>
+        <span class="n">checkpoint</span><span class="p">:</span> <span class="n">Checkpoint</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="p">:</span> <span class="n">CheckpointMetadata</span><span class="p">,</span>
+        <span class="n">new_versions</span><span class="p">:</span> <span class="n">ChannelVersions</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunnableConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously inserts a new checkpoint or updates an existing one in the database.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.</span>
+<span class="sd">            checkpoint (Checkpoint): The checkpoint data to store.</span>
+<span class="sd">            metadata (CheckpointMetadata): Additional metadata for the checkpoint.</span>
+<span class="sd">            new_versions (ChannelVersions): New channel versions as of this write.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            RunnableConfig: Updated configuration after storing the checkpoint.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Implement asynchronous version if needed</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">new_versions</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.aput_writes">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput_writes">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">aput_writes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">RunnableConfig</span><span class="p">,</span>
+        <span class="n">writes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">task_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously stores intermediate writes linked to a checkpoint.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.</span>
+<span class="sd">            writes (Sequence[Tuple[str, Any]]): List of writes to store.</span>
+<span class="sd">            task_id (str): Identifier for the task creating the writes.</span>
+<span class="sd">            task_path (str, optional): Path of the task creating the writes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Implement asynchronous version if needed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">put_writes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">writes</span><span class="p">,</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">task_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.aget_tuple">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aget_tuple">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">aget_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">RunnableConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CheckpointTuple</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously retrieves a checkpoint tuple from the database.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Optional[CheckpointTuple]: The retrieved checkpoint tuple, or None if not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Implement asynchronous version if needed</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tuple</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OracleCheckpointSaver.alist">
+<a class="viewcode-back" href="../../oci_langgraph.html#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.alist">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">alist</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunnableConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunnableConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">CheckpointTuple</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously lists checkpoints that match the given criteria.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (Optional[RunnableConfig], optional): Base configuration</span>
+<span class="sd">            for filtering checkpoints.</span>
+<span class="sd">            filter (Optional[Dict[str, Any]], optional): Additional filtering criteria.</span>
+<span class="sd">            before (Optional[RunnableConfig], optional): List checkpoints</span>
+<span class="sd">            created before this configuration.</span>
+<span class="sd">            limit (Optional[int], optional): Maximum number of checkpoints to return.</span>
+
+<span class="sd">        Yields:</span>
+<span class="sd">            AsyncIterator[CheckpointTuple]: Asynchronous iterator of matching checkpoint tuples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Implement asynchronous version if needed</span>
+        <span class="k">for</span> <span class="n">checkpoint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">checkpoint</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, L. Saetta.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
