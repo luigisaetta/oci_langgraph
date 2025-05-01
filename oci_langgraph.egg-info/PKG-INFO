@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: oci_langgraph
-Version: 0.1.2
+Version: 0.1.3
 Summary: A set of utility classes to enhance AI agent development with LangGraph and OCI
 Home-page: https://github.com/luigisaetta/oci_langgraph
 Author: L. Saetta
@@ -20,6 +20,7 @@ Requires-Dist: langchain-community>=0.3.23
 Requires-Dist: langgraph>=0.4.1
 Requires-Dist: oci>=2.150.3
 Requires-Dist: oracledb>=3.1.0
+Requires-Dist: py-zipkin==1.2.8
 Dynamic: license-file
 
 # LangGraph on OCI

@@ -34,7 +34,6 @@ class AgentBase(Runnable, ABC):
         :param agent_name: the name of the agent
         :param name: the name of the step
         """
-        super().__init__(name)
         self.agent_name = agent_name
         self.name = name
 
