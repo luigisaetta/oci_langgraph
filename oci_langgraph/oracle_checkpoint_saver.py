@@ -70,6 +70,8 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
         """
         super().__init__()
         self.pool = None
+        # the name of the table for the checkpoints
+        self.table_name = table_name.upper()
         try:
             self.pool = oracledb.create_pool(
                 min=min_connections, max=max_connections, **connect_args
@@ -82,8 +84,6 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
                 f"Failed to initialize Oracle connection pool: {e}"
             ) from e
 
-        # the name of the table for the checkpoints
-        self.table_name = table_name.upper()
 
     def __del__(self):
         """Clean up resources when the object is destroyed"""
