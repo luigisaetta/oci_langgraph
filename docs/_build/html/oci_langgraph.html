@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>oci_langgraph package &mdash; oci_langgraph 0.1.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fd825880"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            oci_langgraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">oci_langgraph package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oci_langgraph.agent_base">oci_langgraph.agent_base module</a><ul>
+<li><a class="reference internal" href="#oci_langgraph.agent_base.AgentBase"><code class="docutils literal notranslate"><span class="pre">AgentBase</span></code></a><ul>
+<li><a class="reference internal" href="#oci_langgraph.agent_base.AgentBase.handle_invoke"><code class="docutils literal notranslate"><span class="pre">AgentBase.handle_invoke()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.agent_base.AgentBase.invoke"><code class="docutils literal notranslate"><span class="pre">AgentBase.invoke()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-oci_langgraph.oracle_apm_transport">oci_langgraph.oracle_apm_transport module</a><ul>
+<li><a class="reference internal" href="#oci_langgraph.oracle_apm_transport.APMTransport"><code class="docutils literal notranslate"><span class="pre">APMTransport</span></code></a><ul>
+<li><a class="reference internal" href="#oci_langgraph.oracle_apm_transport.APMTransport.http_transport"><code class="docutils literal notranslate"><span class="pre">APMTransport.http_transport()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_apm_transport.APMTransport.is_tracing_enabled"><code class="docutils literal notranslate"><span class="pre">APMTransport.is_tracing_enabled()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-oci_langgraph.oracle_checkpoint_saver">oci_langgraph.oracle_checkpoint_saver module</a><ul>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver</span></code></a><ul>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aget_tuple"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.aget_tuple()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.alist"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.alist()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.aput()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput_writes"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.aput_writes()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.get_tuple"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.get_tuple()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.list"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.list()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.put()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put_writes"><code class="docutils literal notranslate"><span class="pre">OracleCheckpointSaver.put_writes()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-oci_langgraph.utils">oci_langgraph.utils module</a><ul>
+<li><a class="reference internal" href="#oci_langgraph.utils.extract_json_from_text"><code class="docutils literal notranslate"><span class="pre">extract_json_from_text()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.utils.get_console_logger"><code class="docutils literal notranslate"><span class="pre">get_console_logger()</span></code></a></li>
+<li><a class="reference internal" href="#oci_langgraph.utils.remove_triple_backtics"><code class="docutils literal notranslate"><span class="pre">remove_triple_backtics()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-oci_langgraph">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">oci_langgraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">oci_langgraph package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/oci_langgraph.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="oci-langgraph-package">
+<h1>oci_langgraph package<a class="headerlink" href="#oci-langgraph-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-oci_langgraph.agent_base">
+<span id="oci-langgraph-agent-base-module"></span><h2>oci_langgraph.agent_base module<a class="headerlink" href="#module-oci_langgraph.agent_base" title="Link to this heading"></a></h2>
+<p>agent_base.py</p>
+<p>Author: L. Saetta</p>
+<p>AgentBase class provide a base class to implement a node in the LangGraph graph.
+The framework will call the invoke() method.
+This class implement the Template Method Design pattern.</p>
+<p>License: Mit</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="oci_langgraph.agent_base.AgentBase">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oci_langgraph.agent_base.</span></span><span class="sig-name descname"><span class="pre">AgentBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.agent_base.AgentBase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Runnable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>AgentBase class provide a base class to implement a node in the LanGraph graph.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.agent_base.AgentBase.handle_invoke">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle_invoke</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.agent_base.AgentBase.handle_invoke" title="Link to this definition"></a></dt>
+<dd><p>Handle the invocation of the agent.
+This method should be implemented by subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – The input to the agent.</p></li>
+<li><p><strong>config</strong> – The configuration for the agent.</p></li>
+<li><p><strong>kwargs</strong> – Additional arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output of the agent.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.agent_base.AgentBase.invoke">
+<span class="sig-name descname"><span class="pre">invoke</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.agent_base.AgentBase.invoke" title="Link to this definition"></a></dt>
+<dd><p>Invoke the agent with the given input and configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – The input to the agent.</p></li>
+<li><p><strong>config</strong> – The configuration for the agent.</p></li>
+<li><p><strong>kwargs</strong> – Additional arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output of the agent.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-oci_langgraph.oracle_apm_transport">
+<span id="oci-langgraph-oracle-apm-transport-module"></span><h2>oci_langgraph.oracle_apm_transport module<a class="headerlink" href="#module-oci_langgraph.oracle_apm_transport" title="Link to this heading"></a></h2>
+<p>File name: trasnport.py
+Author: Luigi Saetta
+Date last modified: 2025-05-01
+Python Version: 3.11</p>
+<dl>
+<dt>Description:</dt><dd><p>This code provide the http transport support for integration with OCI APM.
+It must be used on where we start the trace, at the beginning</p>
+</dd>
+<dt>Usage:</dt><dd><p>Import this module into other scripts to use its functions.
+Example:</p>
+<blockquote>
+<div><p>…</p>
+</div></blockquote>
+</dd>
+<dt>License:</dt><dd><p>This code is released under the MIT License.</p>
+</dd>
+<dt>Warnings:</dt><dd><p>This module is in development, may change in future versions.</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_apm_transport.APMTransport">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oci_langgraph.oracle_apm_transport.</span></span><span class="sig-name descname"><span class="pre">APMTransport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'application/json'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_tracing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.oracle_apm_transport.APMTransport" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to send encoded Zipkin span data to OCI APM.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_apm_transport.APMTransport.http_transport">
+<span class="sig-name descname"><span class="pre">http_transport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.oracle_apm_transport.APMTransport.http_transport" title="Link to this definition"></a></dt>
+<dd><p>Sends encoded tracing data to OCI APM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>encoded_span</strong> – The encoded span data to send.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>requests.Response or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_apm_transport.APMTransport.is_tracing_enabled">
+<span class="sig-name descname"><span class="pre">is_tracing_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.oracle_apm_transport.APMTransport.is_tracing_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if tracing is enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if tracing is enabled, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-oci_langgraph.oracle_checkpoint_saver">
+<span id="oci-langgraph-oracle-checkpoint-saver-module"></span><h2>oci_langgraph.oracle_checkpoint_saver module<a class="headerlink" href="#module-oci_langgraph.oracle_checkpoint_saver" title="Link to this heading"></a></h2>
+<p>oracle_checkpoint_saver.py</p>
+<p>Author: L. Saetta</p>
+<p>This module provides the OracleCheckpointSaver class, which implements
+LangGraph’s BaseCheckpointSaver interface to persist workflow state
+in an Oracle Database using the oracledb driver.</p>
+<dl class="simple">
+<dt>It is an implementation of:</dt><dd><p><a class="reference external" href="https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint">https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint</a></p>
+</dd>
+</dl>
+<p>License: Mit</p>
+<p>Updates:
+- (19/04/2025) added connection pooling to improve performance.
+- (19/04/2025) added creation of the table if it doesn’t exist.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oci_langgraph.oracle_checkpoint_saver.</span></span><span class="sig-name descname"><span class="pre">OracleCheckpointSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connect_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_connections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_connections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'OCI_LANGGRAPH_CHECKPOINTS'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCheckpointSaver</span></code></p>
+<p>A checkpoint saver that persists LangGraph workflow state to an
+Oracle Database.</p>
+<p>This class manages the insertion, updating, retrieval, and listing
+of checkpoints identified by thread_id and checkpoint_id.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>connection (oracledb.Connection): Active connection to the Oracle Database.
+cursor (oracledb.Cursor): Cursor object for executing SQL statements.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aget_tuple">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aget_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">CheckpointTuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aget_tuple" title="Link to this definition"></a></dt>
+<dd><p>Asynchronously retrieves a checkpoint tuple from the database.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.</p>
+</dd>
+<dt>Returns:</dt><dd><p>Optional[CheckpointTuple]: The retrieved checkpoint tuple, or None if not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.alist">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncIterator</span><span class="p"><span class="pre">[</span></span><span class="pre">CheckpointTuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.alist" title="Link to this definition"></a></dt>
+<dd><p>Asynchronously lists checkpoints that match the given criteria.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>config (Optional[RunnableConfig], optional): Base configuration
+for filtering checkpoints.
+filter (Optional[Dict[str, Any]], optional): Additional filtering criteria.
+before (Optional[RunnableConfig], optional): List checkpoints
+created before this configuration.
+limit (Optional[int], optional): Maximum number of checkpoints to return.</p>
+</dd>
+<dt>Yields:</dt><dd><p>AsyncIterator[CheckpointTuple]: Asynchronous iterator of matching checkpoint tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CheckpointMetadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_versions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">RunnableConfig</span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput" title="Link to this definition"></a></dt>
+<dd><p>Asynchronously inserts a new checkpoint or updates an existing one in the database.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.
+checkpoint (Checkpoint): The checkpoint data to store.
+metadata (CheckpointMetadata): Additional metadata for the checkpoint.
+new_versions (ChannelVersions): New channel versions as of this write.</p>
+</dd>
+<dt>Returns:</dt><dd><p>RunnableConfig: Updated configuration after storing the checkpoint.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput_writes">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aput_writes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.aput_writes" title="Link to this definition"></a></dt>
+<dd><p>Asynchronously stores intermediate writes linked to a checkpoint.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.
+writes (Sequence[Tuple[str, Any]]): List of writes to store.
+task_id (str): Identifier for the task creating the writes.
+task_path (str, optional): Path of the task creating the writes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.get_tuple">
+<span class="sig-name descname"><span class="pre">get_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">CheckpointTuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.get_tuple" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the most recent or specified checkpoint for a given thread.</p>
+<p>If <cite>checkpoint_id</cite> is provided, retrieves that specific checkpoint.
+Otherwise, selects the most recent checkpoint based on created_at.</p>
+<p>All Decimal values are converted to native int or float.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.list">
+<span class="sig-name descname"><span class="pre">list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">CheckpointTuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.list" title="Link to this definition"></a></dt>
+<dd><p>Lists checkpoints for a given thread_id, ordered by created_at descending.
+All Decimal values in state/metadata are converted to int/float.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>config: Configuration that may contain thread_id.
+filter: Not used.
+before: Optional checkpoint_id to filter out newer ones.
+limit: Optional number of records to return.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CheckpointMetadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_versions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">RunnableConfig</span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put" title="Link to this definition"></a></dt>
+<dd><p>Inserts a new checkpoint or updates an existing one in the database.
+Uses created_at to track the order of checkpoints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put_writes">
+<span class="sig-name descname"><span class="pre">put_writes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RunnableConfig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#oci_langgraph.oracle_checkpoint_saver.OracleCheckpointSaver.put_writes" title="Link to this definition"></a></dt>
+<dd><p>Stores intermediate writes linked to a checkpoint.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>config (RunnableConfig): Configuration specifying thread_id and checkpoint_id.
+writes (Sequence[Tuple[str, Any]]): List of writes to store.
+task_id (str): Identifier for the task creating the writes.
+task_path (str, optional): Path of the task creating the writes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-oci_langgraph.utils">
+<span id="oci-langgraph-utils-module"></span><h2>oci_langgraph.utils module<a class="headerlink" href="#module-oci_langgraph.utils" title="Link to this heading"></a></h2>
+<p>Utils</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="oci_langgraph.utils.extract_json_from_text">
+<span class="sig-prename descclassname"><span class="pre">oci_langgraph.utils.</span></span><span class="sig-name descname"><span class="pre">extract_json_from_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.utils.extract_json_from_text" title="Link to this definition"></a></dt>
+<dd><p>Extracts JSON content from a given text and returns it as a Python dictionary.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>text (str): The input text containing JSON content.</p>
+</dd>
+<dt>Returns:</dt><dd><p>dict: Parsed JSON data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oci_langgraph.utils.get_console_logger">
+<span class="sig-prename descclassname"><span class="pre">oci_langgraph.utils.</span></span><span class="sig-name descname"><span class="pre">get_console_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oci_langgraph.utils.get_console_logger" title="Link to this definition"></a></dt>
+<dd><p>To get a logger to print on console</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oci_langgraph.utils.remove_triple_backtics">
+<span class="sig-prename descclassname"><span class="pre">oci_langgraph.utils.</span></span><span class="sig-name descname"><span class="pre">remove_triple_backtics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#oci_langgraph.utils.remove_triple_backtics" title="Link to this definition"></a></dt>
+<dd><p>Remove triple backtics from a string</p>
+</dd></dl>
+
+</section>
+<section id="module-oci_langgraph">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oci_langgraph" title="Link to this heading"></a></h2>
+<p>Init module</p>
+<p>Autho: L. Saetta</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, L. Saetta.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: oci_langgraph
-Version: 0.1.3
+Version: 0.1.4
 Summary: A set of utility classes to enhance AI agent development with LangGraph and OCI
 Home-page: https://github.com/luigisaetta/oci_langgraph
 Author: L. Saetta
