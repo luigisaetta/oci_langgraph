@@ -1,12 +1,12 @@
 """
-File name: trasnport.py
+File name: transport.py
 Author: Luigi Saetta
 Date last modified: 2025-05-01
 Python Version: 3.11
 
 Description:
     This code provide the http transport support for integration with OCI APM.
-    It must be used on where we start the trace, at the beginning
+    It must be used only where we start the trace, at the beginning
 
 Usage:
     Import this module into other scripts to use its functions.

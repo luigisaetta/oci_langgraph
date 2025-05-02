@@ -56,7 +56,7 @@ class AgentBase(Runnable, ABC):
     def handle_invoke(self, input, config=None, **kwargs):
         """
         Handle the invocation of the agent.
-        This method should be implemented by subclasses.
+        This method must be implemented by subclasses.
 
         :param input: The input to the agent.
         :param config: The configuration for the agent.

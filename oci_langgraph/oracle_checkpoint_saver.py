@@ -37,7 +37,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 logger = get_console_logger()
 
-# the name of the Oracle DB table
+# the name of the Oracle DB table (default value, can be overridden)
 TABLE_NAME = "OCI_LANGGRAPH_CHECKPOINTS"
 
 

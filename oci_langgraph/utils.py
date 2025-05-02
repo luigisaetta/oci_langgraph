@@ -1,5 +1,10 @@
 """
-Utils
+Utils for OCI LangGraph
+This module provides utility functions for the OCI LangGraph framework.
+Author: L. Saetta
+Date: 2025-05-01
+Python Version: 3.11
+License: MIT
 """
 
 import re

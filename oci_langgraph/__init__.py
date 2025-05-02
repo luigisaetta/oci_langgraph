@@ -1,7 +1,7 @@
 """
 Init module
 
-Autho: L. Saetta
+Author: L. Saetta
 """
 
 # list here all the classes you want to expose

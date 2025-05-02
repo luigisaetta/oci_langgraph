@@ -2,8 +2,8 @@
 This repository will contain all the code for the oci_langraph package. A set of utility classes, with usage examples, that will simplify the creation of Enterprise-grade AI agents and workflow on OCI.
 
 ## Features available
-* checkpointing
-* integration with OCI APM
+* Checkpointing
+* Integration with OCI APM
 * ...
 
 ## Examples
