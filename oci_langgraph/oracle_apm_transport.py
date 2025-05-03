@@ -54,7 +54,7 @@ class APMTransport:
 
     def http_transport(self, encoded_span: bytes):
         """
-        Sends encoded tracing data to OCI APM.
+        Sends tracing data to OCI APM.
 
         :param encoded_span: The encoded span data to send.
         :return: requests.Response or None
@@ -86,7 +86,7 @@ class APMTransport:
             logger.error("Failed to send span to APM: %s", str(e))
             return None
         except Exception as e:
-            logger.error("Unexpected error in APMTransport.send: %s", str(e))
+            logger.error("Unexpected error in APMTransport.http_transport: %s", str(e))
             return None
 
     def is_tracing_enabled(self):

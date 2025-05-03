@@ -59,7 +59,7 @@ def extract_json_from_text(text):
 
 def remove_triple_backtics(input_text: str) -> str:
     """
-    Remove triple backtics from a string
+    Remove triple backtics from a string containing python code
     """
     _text = input_text.replace("```python", "")
     _text = _text.replace("```", "")

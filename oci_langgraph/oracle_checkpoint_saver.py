@@ -10,11 +10,12 @@ in an Oracle Database using the oracledb driver.
 It is an implementation of:
     https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint
 
-License: Mit
+License: MIT
 
 Updates:
 - (19/04/2025) added connection pooling to improve performance.
 - (19/04/2025) added creation of the table if it doesn't exist.
+- (03/05/2025) added method delete and adelete
 """
 
 import os
@@ -83,7 +84,6 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
             raise RuntimeError(
                 f"Failed to initialize Oracle connection pool: {e}"
             ) from e
-
 
     def __del__(self):
         """Clean up resources when the object is destroyed"""
@@ -300,6 +300,39 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
 
         return None
 
+    def _build_list_query(
+        self, thread_id: str, before: Optional[RunnableConfig], limit: Optional[int]
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Builds the SQL query to list checkpoints for a given thread_id.
+        Used by: list().
+        Args:
+            thread_id (str): The thread ID to filter checkpoints.
+            before (Optional[RunnableConfig]): Optional checkpoint_id to filter out newer ones.
+            limit (Optional[int]): Optional limit on the number of records to return.
+        Returns:
+            Tuple[str, Dict[str, Any]]: The SQL query and parameters for execution.
+        """
+        sql = f"""
+            SELECT state, metadata
+            FROM {self.table_name}
+            WHERE thread_id = :thread_id
+        """
+        params = {"thread_id": thread_id}
+
+        if before:
+            before_id = before["configurable"].get("checkpoint_id")
+            if before_id:
+                sql += " AND checkpoint_id < :before_id"
+                params["before_id"] = before_id
+
+        sql += " ORDER BY created_at DESC"
+
+        if limit:
+            sql += f" FETCH FIRST {limit} ROWS ONLY"
+
+        return sql, params
+
     def list(
         self,
         config: Optional[RunnableConfig] = None,
@@ -319,29 +352,11 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
             limit: Optional number of records to return.
         """
         thread_id = config["configurable"]["thread_id"] if config else None
-        params = {"thread_id": thread_id}
-
-        base_sql = f"""
-            SELECT state, metadata
-            FROM {self.table_name}
-            WHERE thread_id = :thread_id
-        """
-
-        if before:
-            before_id = before["configurable"].get("checkpoint_id")
-            if before_id:
-                base_sql += " AND checkpoint_id < :before_id"
-                params["before_id"] = before_id
-
-        # checkpoints are returned in reverse order of creation
-        base_sql += " ORDER BY created_at DESC"
-
-        if limit:
-            base_sql += f" FETCH FIRST {limit} ROWS ONLY"
+        sql, params = self._build_list_query(thread_id, before, limit)
 
         with self.pool.acquire() as conn:
             with conn.cursor() as cursor:
-                cursor.execute(base_sql, params)
+                cursor.execute(sql, params)
                 for row in cursor.fetchall():
                     state_raw, metadata_raw = row
                     state = (
@@ -440,3 +455,21 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
         # Implement asynchronous version if needed
         for checkpoint in self.list(config, filter=filter, before=before, limit=limit):
             yield checkpoint
+
+    def delete_thread(self, thread_id: str) -> None:
+        """
+        Delete all checkpoints associated with the specified thread_id.
+
+        This feature is not implemented yet.
+        """
+        logger.warning("delete_thread is not implemented.")
+        raise NotImplementedError("delete_thread is not implemented.")
+
+    async def adelete_thread(self, thread_id: str) -> None:
+        """
+        Asynchronously delete all checkpoints associated with the specified thread_id.
+
+        This feature is not implemented yet.
+        """
+        logger.warning("adelete_thread is not implemented.")
+        raise NotImplementedError("adelete_thread is not implemented.")

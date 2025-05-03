@@ -7,7 +7,7 @@ AgentBase class provide a base class to implement a node in the LangGraph graph.
 The framework will call the invoke() method.
 This class implement the Template Method Design pattern.
 
-License: Mit
+License: MIT
 
 """
 
@@ -50,6 +50,7 @@ class AgentBase(Runnable, ABC):
         # this way you get automatically integration with OCI APM
         # to enable you need to configure it
         with zipkin_span(service_name=self.agent_name, span_name=self.name):
+            logger.debug("Invoking %s with input: %s", self.agent_name, input)
             return self.handle_invoke(input, config, **kwargs)
 
     @abstractmethod
