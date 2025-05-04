@@ -26,7 +26,7 @@ class QueueListener(ABC):
         config_path: str,
         service_endpoint: str,
         queue_id: str,
-        channel_id: str,
+        channel_id: str = None,
         profile: str = "DEFAULT",
         max_wait_time: int = 60,
         get_messages_timeout: int = 10,
@@ -59,33 +59,33 @@ class QueueListener(ABC):
         self.get_messages_timeout = get_messages_timeout
         self.visibility_timeout = visibility_timeout
         self.message_limit = message_limit
+
         self.queue_client = QueueClient(
             config=self.config, service_endpoint=self.service_endpoint
         )
 
-    def listen(self, expected_sender_list: list = None):
+    def listen(self):
         """
         Starts listening to the OCI Queue for messages.
 
         The method listens for messages until the specified max_wait_time is reached
-        or until all expected senders have sent their messages.
+        or until the method process_message returns NO_CONTINUE.
+
         For each retrieved message, it processes and deletes the message from the queue.
         """
         logger.info(
             "Started queue listener, max_wait_time %d (sec.)...", self.max_wait_time
         )
-        logger.info("")
 
         # Start the listening loop
-        expected_sender_list = expected_sender_list.copy()
-
         start_time = time.time()
         msgs_received = 0
 
         received_msgs_list = []
+        status = "CONTINUE"
 
         while ((time.time() - start_time) < self.max_wait_time) and (
-            len(expected_sender_list) > 0
+            status == "CONTINUE"
         ):
             try:
                 response = self.queue_client.get_messages(
@@ -105,23 +105,16 @@ class QueueListener(ABC):
                 msgs_received += len(messages)
 
                 for message in messages:
-                    logger.info("Received message: %s", message.content)
+                    logger.debug("Received message: %s", message.content)
 
                     # here we do processing of the message
                     json_msg = json.loads(message.content)
+                    received_msgs_list.append(json_msg)
 
-                    msg = self.process_message(json_msg)
-
-                    received_msgs_list.append(msg)
+                    status = self.process_message(json_msg)
 
                     # Delete the message after processing
                     # remove from the list of expected providers
-                    if msg["sender_id"] in expected_sender_list:
-                        expected_sender_list.remove(msg["sender_id"])
-                        logger.info(
-                            "Provider %s removed from expected list", msg["sender_id"]
-                        )
-
                     self.queue_client.delete_message(
                         queue_id=self.queue_id, message_receipt=message.receipt
                     )
@@ -136,11 +129,21 @@ class QueueListener(ABC):
         return received_msgs_list
 
     @abstractmethod
-    def process_message(self, payload: dict):
+    def process_message(self, payload: dict) -> str:
         """
         Process the message payload.
+
+        This method should be implemented by subclasses to define the
+        specific processing logic for the messages received from the queue.
+        The method should return a status indicating whether to continue
+        processing or not.
+        The default implementation returns "CONTINUE".
+        The status can be "CONTINUE" or "NO_CONTINUE".
         Args:
             payload (dict): The message payload to process.
         """
         # Here you can implement the logic to process the message
         # For example, you can print the payload or perform some action based on its content
+        status = "CONTINUE"
+
+        return status

@@ -49,7 +49,7 @@ class QueuePublisher:
 
     def enqueue_message(self, payload: dict):
         """
-        Enqueue a message to the configured OCI outbound queue.
+        Enqueue a message to the configured OCI queue.
 
         Args:
             payload (dict): The message content to be enqueued. Must be JSON-serializable.
@@ -66,17 +66,17 @@ class QueuePublisher:
             put_messages_details = PutMessagesDetails(messages=[message])
 
             # Send the message to the queue
-            logger.info("Sending message to queue %s...", self.queue_ocid)
+            logger.info("Sending message to queue: %s...", self.queue_ocid)
 
             response = self.queue_client.put_messages(
                 queue_id=self.queue_ocid, put_messages_details=put_messages_details
             )
 
-            logger.info(
+            logger.debug(
                 "Message enqueued successfully with status code: %s", response.status
             )
             return response
 
         except Exception as e:
-            logger.exception("Failed to enqueue message: %s", str(e))
+            logger.error("Failed to enqueue message: %s", str(e))
             raise
