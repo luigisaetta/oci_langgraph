@@ -7,10 +7,13 @@ Python Version: 3.11
 License: MIT
 """
 
+import os
 import re
 import json
 import logging
 import oci
+
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 
 def get_console_logger():
@@ -77,13 +80,24 @@ def get_security_config_and_signer(auth_type):
     Returns:
         tuple: A tuple containing the config and signer.
     """
+    logger = get_console_logger()
+
     if auth_type == "API_KEY":
         config = oci.config.from_file()
         signer = None
+
+        if DEBUG:
+            logger.info("Queue client, using API_KEY...")
+            logger.debug("Config: %s", config)
     elif auth_type == "INSTANCE_PRINCIPAL":
         # set the signer to use instance principal
         config = {}
         signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+
+        if DEBUG:
+            logger.info("Queue client, using INSTANCE_PRINCIPAL...")
+            logger.debug("Config: %s", config)
+            logger.debug("Signer: %s", signer)
     else:
         raise ValueError(
             "Unsupported authentication type. Use 'API_KEY' or 'INSTANCE_PRINCIPAL'."

@@ -45,7 +45,6 @@ class QueuePublisher:
         self.service_endpoint = service_endpoint
 
         if config:
-            logger.info("Queue client, using API_KEY...")
             self.queue_client = QueueClient(
                 config=config, service_endpoint=self.service_endpoint
             )
