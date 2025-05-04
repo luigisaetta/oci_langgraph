@@ -62,9 +62,17 @@ class QueueListener(ABC):
         self.visibility_timeout = kwargs.get("visibility_timeout", 30)
         self.message_limit = kwargs.get("message_limit", 5)
 
-        self.queue_client = QueueClient(
-            config=config, service_endpoint=self.service_endpoint, signer=signer
-        )
+        if config:
+            logger.info("Queue client, using API_KEY...")
+            self.queue_client = QueueClient(
+                config=config, service_endpoint=self.service_endpoint
+            )
+        else:
+            self.queue_client = QueueClient(
+                config={},  # Empty config for instance principal
+                signer=signer,
+                service_endpoint=self.service_endpoint,
+            )
 
     def listen(self):
         """

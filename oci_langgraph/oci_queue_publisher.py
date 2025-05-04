@@ -44,9 +44,17 @@ class QueuePublisher:
         self.queue_ocid = queue_ocid
         self.service_endpoint = service_endpoint
 
-        self.queue_client = QueueClient(
-            config=config, service_endpoint=self.service_endpoint, signer=signer
-        )
+        if config:
+            logger.info("Queue client, using API_KEY...")
+            self.queue_client = QueueClient(
+                config=config, service_endpoint=self.service_endpoint
+            )
+        else:
+            self.queue_client = QueueClient(
+                config={},  # Empty config for instance principal
+                signer=signer,
+                service_endpoint=self.service_endpoint,
+            )
 
         logger.info("QueuePublisher initialized for queue OCID: %s", self.queue_ocid)
 
