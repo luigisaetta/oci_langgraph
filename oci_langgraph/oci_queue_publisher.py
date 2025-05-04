@@ -11,10 +11,9 @@ License: MIT
 """
 
 import json
-import oci
 from oci.queue import QueueClient
 from oci.queue.models import PutMessagesDetails, PutMessagesDetailsEntry
-from .utils import get_console_logger
+from .utils import get_console_logger, get_security_config_and_signer
 
 logger = get_console_logger()
 
@@ -27,22 +26,26 @@ class QueuePublisher:
     email partner, allowing asynchronous and scalable dispatching.
     """
 
-    def __init__(self, queue_ocid: str, service_endpoint: str, config: dict = None):
+    def __init__(
+        self, queue_ocid: str, service_endpoint: str, auth_type: str = "API_KEY"
+    ):
         """
         Initialize the QueuePublisher with the given OCI queue configuration.
 
         Args:
             queue_ocid (str): OCID of the OCI queue.
             service_endpoint (str): The endpoint URL of the OCI queue service.
-            config (dict, optional): OCI config dictionary. If not provided,
-                                     defaults to using `~/.oci/config`.
+            auth_type (str): The authentication type to use. Options are:
+                - "API_KEY": Uses API key authentication (default).
+                - "INSTANCE_PRINCIPAL": Uses instance principal authentication.
         """
-        self.config = config or oci.config.from_file()
+        config, signer = get_security_config_and_signer(auth_type)
+
         self.queue_ocid = queue_ocid
         self.service_endpoint = service_endpoint
 
         self.queue_client = QueueClient(
-            config=self.config, service_endpoint=self.service_endpoint
+            config=config, service_endpoint=self.service_endpoint, signer=signer
         )
 
         logger.info("QueuePublisher initialized for queue OCID: %s", self.queue_ocid)

@@ -225,7 +225,6 @@ class OracleCheckpointSaver(BaseCheckpointSaver):
             task_id (str): Identifier for the task creating the writes.
             task_path (str, optional): Path of the task creating the writes.
         """
-        # TODO Implement logic to store intermediate writes if necessary
         if DEBUG:
             logger.info("OracleCheckpointSaver, called put_writes...")
 

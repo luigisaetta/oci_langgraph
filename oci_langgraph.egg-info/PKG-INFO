@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: oci_langgraph
-Version: 0.1.4
+Version: 0.1.5
 Summary: A set of utility classes to enhance AI agent development with LangGraph and OCI
 Home-page: https://github.com/luigisaetta/oci_langgraph
 Author: L. Saetta
@@ -27,14 +27,20 @@ Dynamic: license-file
 This repository will contain all the code for the oci_langraph package. A set of utility classes, with usage examples, that will simplify the creation of Enterprise-grade AI agents and workflow on OCI.
 
 ## Features available
-* checkpointing
-* integration with OCI APM
+* Checkpointing
+* Integration with OCI APM
 * ...
 
-## Debugging
-You can run in DEBUG mode setting the environment variable
+## Examples
+You can find examples in the directory:
+[examples](./examples/)
 
+## Debugging
+You can run in DEBUG mode setting the environment variable:
+```
 DEBUG=True
+```
+
 
 
 

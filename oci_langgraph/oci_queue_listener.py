@@ -8,10 +8,9 @@ Email dequeuer:
 import time
 import json
 from abc import ABC, abstractmethod
-import oci
 from oci.queue import QueueClient
 
-from .utils import get_console_logger
+from .utils import get_console_logger, get_security_config_and_signer
 
 logger = get_console_logger()
 
@@ -23,45 +22,48 @@ class QueueListener(ABC):
 
     def __init__(
         self,
-        config_path: str,
+        queue_ocid: str,
         service_endpoint: str,
-        queue_id: str,
+        auth_type: str = "API_KEY",
         channel_id: str = None,
-        profile: str = "DEFAULT",
-        max_wait_time: int = 60,
-        get_messages_timeout: int = 10,
-        visibility_timeout: int = 30,
-        message_limit: int = 5,
+        # introduced to handle additional params
+        **kwargs,
     ):
         """
         Initializes the OCIQueueListener with the specified parameters.
 
         Args:
-            config_path (str): Path to the OCI configuration file.
-            profile (str): Profile name within the OCI configuration file.
+            queue_ocid (str): OCID of the OCI Queue.
             service_endpoint (str): The service endpoint URL for the OCI Queue.
-            queue_id (str): The OCID of the OCI Queue.
-            max_wait_time (int, optional): Maximum duration in seconds to listen for messages.
-                Defaults to 60.
-            get_messages_timeout (int, optional): Timeout in seconds for each get_messages call.
-                Defaults to 10.
-            visibility_timeout (int, optional): Duration in seconds that a message remains
-                invisible to other consumers after being retrieved. Defaults to 30.
-            message_limit (int, optional): Maximum number of messages to retrieve
-                per get_messages call.
-            Defaults to 5.
+            auth_type (str): The authentication type to use. Options are:
+                - "API_KEY": Uses API key authentication (default).
+                - "INSTANCE_PRINCIPAL": Uses instance principal authentication.
+            channel_id (str): The channel ID to filter messages. Can be None
+
+            kwargs: Optional parameters:
+                - max_wait_time (int): Maximum time to wait for all messages in seconds
+                  (default: 3600)
+                - get_messages_timeout (int): Timeout in seconds for each get_messages call
+                  (default: 10)
+                - visibility_timeout (int): Time a message remains invisible after being read
+                  (default: 30)
+                - message_limit (int): Max number of messages per get_messages call (default: 5)
         """
-        self.config = oci.config.from_file(config_path, profile)
+        config, signer = get_security_config_and_signer(auth_type)
+
+        self.queue_ocid = queue_ocid
         self.service_endpoint = service_endpoint
-        self.queue_id = queue_id
+
         self.channel_id = channel_id
-        self.max_wait_time = max_wait_time
-        self.get_messages_timeout = get_messages_timeout
-        self.visibility_timeout = visibility_timeout
-        self.message_limit = message_limit
+
+        # Optional parameters with defaults
+        self.max_wait_time = kwargs.get("max_wait_time", 3600)
+        self.get_messages_timeout = kwargs.get("get_messages_timeout", 10)
+        self.visibility_timeout = kwargs.get("visibility_timeout", 30)
+        self.message_limit = kwargs.get("message_limit", 5)
 
         self.queue_client = QueueClient(
-            config=self.config, service_endpoint=self.service_endpoint
+            config=config, service_endpoint=self.service_endpoint, signer=signer
         )
 
     def listen(self):
@@ -89,7 +91,7 @@ class QueueListener(ABC):
         ):
             try:
                 response = self.queue_client.get_messages(
-                    queue_id=self.queue_id,
+                    queue_id=self.queue_ocid,
                     channel_filter=self.channel_id,
                     visibility_in_seconds=self.visibility_timeout,
                     timeout_in_seconds=self.get_messages_timeout,
@@ -99,7 +101,7 @@ class QueueListener(ABC):
                 messages = response.data.messages
 
                 if not messages:
-                    logger.info("No messages received. Waiting...")
+                    logger.debug("No messages received. Waiting...")
                     continue
 
                 msgs_received += len(messages)
@@ -116,7 +118,7 @@ class QueueListener(ABC):
                     # Delete the message after processing
                     # remove from the list of expected providers
                     self.queue_client.delete_message(
-                        queue_id=self.queue_id, message_receipt=message.receipt
+                        queue_id=self.queue_ocid, message_receipt=message.receipt
                     )
 
             except Exception as e:

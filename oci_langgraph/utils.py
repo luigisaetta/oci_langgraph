@@ -10,6 +10,7 @@ License: MIT
 import re
 import json
 import logging
+import oci
 
 
 def get_console_logger():
@@ -64,3 +65,27 @@ def remove_triple_backtics(input_text: str) -> str:
     _text = input_text.replace("```python", "")
     _text = _text.replace("```", "")
     return _text
+
+
+def get_security_config_and_signer(auth_type):
+    """
+    Get the security config and signer based on the authentication type.
+    Args:
+        auth_type (str): The authentication type to use. Options are:
+            - "API_KEY": Uses API key authentication (default).
+            - "INSTANCE_PRINCIPAL": Uses instance principal authentication.
+    Returns:
+        tuple: A tuple containing the config and signer.
+    """
+    if auth_type == "API_KEY":
+        config = oci.config.from_file()
+        signer = None
+    elif auth_type == "INSTANCE_PRINCIPAL":
+        # set the signer to use instance principal
+        config = {}
+        signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+    else:
+        raise ValueError(
+            "Unsupported authentication type. Use 'API_KEY' or 'INSTANCE_PRINCIPAL'."
+        )
+    return config, signer
