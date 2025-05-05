@@ -56,6 +56,15 @@ class AgentBase(Runnable, ABC):
         """
         self.logger.info(message, *args)
 
+    def error(self, message: str, *args):
+        """
+        Log an error message.
+
+        :param message: The message to log.
+        :param args: Additional arguments for the message.
+        """
+        self.logger.error(message, *args)
+
     def invoke(self, input, config=None, **kwargs):
         """
         Invoke the agent with the given input and configuration.
