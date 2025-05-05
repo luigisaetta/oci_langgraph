@@ -8,14 +8,13 @@ Email dequeuer:
 import time
 import json
 from abc import ABC, abstractmethod
-from oci.queue import QueueClient
-
-from .utils import get_console_logger, get_security_config_and_signer
+from .oci_queue_base import QueueBase
+from .utils import get_console_logger
 
 logger = get_console_logger()
 
 
-class QueueListener(ABC):
+class QueueListener(QueueBase, ABC):
     """
     Reads from an INBOUND queue and processes messages
     """
@@ -25,7 +24,6 @@ class QueueListener(ABC):
         queue_ocid: str,
         service_endpoint: str,
         auth_type: str = "API_KEY",
-        channel_id: str = None,
         # introduced to handle additional params
         **kwargs,
     ):
@@ -41,6 +39,7 @@ class QueueListener(ABC):
             channel_id (str): The channel ID to filter messages. Can be None
 
             kwargs: Optional parameters:
+                - channel_id (str): The channel ID to filter messages.
                 - max_wait_time (int): Maximum time to wait for all messages in seconds
                   (default: 3600)
                 - get_messages_timeout (int): Timeout in seconds for each get_messages call
@@ -49,30 +48,15 @@ class QueueListener(ABC):
                   (default: 30)
                 - message_limit (int): Max number of messages per get_messages call (default: 5)
         """
-        config, signer = get_security_config_and_signer(auth_type)
-
-        self.queue_ocid = queue_ocid
-        self.service_endpoint = service_endpoint
-
-        self.channel_id = channel_id
+        super().__init__(queue_ocid, service_endpoint, auth_type, **kwargs)
+        logger.info("Queue client initialized for QueueListener")
 
         # Optional parameters with defaults
+        self.channel_id = kwargs.get("channel_id", None)
         self.max_wait_time = kwargs.get("max_wait_time", 3600)
         self.get_messages_timeout = kwargs.get("get_messages_timeout", 10)
         self.visibility_timeout = kwargs.get("visibility_timeout", 30)
         self.message_limit = kwargs.get("message_limit", 5)
-
-        if config:
-            logger.info("Queue client, using API_KEY...")
-            self.queue_client = QueueClient(
-                config=config, service_endpoint=self.service_endpoint
-            )
-        else:
-            self.queue_client = QueueClient(
-                config={},  # Empty config for instance principal
-                signer=signer,
-                service_endpoint=self.service_endpoint,
-            )
 
     def listen(self):
         """

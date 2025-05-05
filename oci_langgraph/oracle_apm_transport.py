@@ -96,3 +96,11 @@ class APMTransport:
         :return: True if tracing is enabled, False otherwise.
         """
         return self.enable_tracing
+
+    def set_tracing_enabled(self, enable: bool):
+        """
+        Set the tracing enabled flag.
+
+        :param enable: True to enable tracing, False to disable.
+        """
+        self.enable_tracing = enable

@@ -19,8 +19,6 @@ from py_zipkin.zipkin import zipkin_span
 
 from .utils import get_console_logger
 
-logger = get_console_logger()
-
 
 class AgentBase(Runnable, ABC):
     """
@@ -36,6 +34,27 @@ class AgentBase(Runnable, ABC):
         """
         self.agent_name = agent_name
         self.name = name
+        # added logger
+        self.logger = get_console_logger()
+
+    # logger methods
+    def debug(self, message: str, *args):
+        """
+        Log a debug message.
+
+        :param message: The message to log.
+        :param args: Additional arguments for the message.
+        """
+        self.logger.debug(message, *args)
+
+    def info(self, message: str, *args):
+        """
+        Log an info message.
+
+        :param message: The message to log.
+        :param args: Additional arguments for the message.
+        """
+        self.logger.info(message, *args)
 
     def invoke(self, input, config=None, **kwargs):
         """
@@ -50,7 +69,7 @@ class AgentBase(Runnable, ABC):
         # this way you get automatically integration with OCI APM
         # to enable you need to configure it
         with zipkin_span(service_name=self.agent_name, span_name=self.name):
-            logger.debug("Invoking %s with input: %s", self.agent_name, input)
+            self.debug("Invoking %s with input: %s", self.agent_name, input)
             return self.handle_invoke(input, config, **kwargs)
 
     @abstractmethod

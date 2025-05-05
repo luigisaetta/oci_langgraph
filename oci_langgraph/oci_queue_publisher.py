@@ -11,14 +11,14 @@ License: MIT
 """
 
 import json
-from oci.queue import QueueClient
 from oci.queue.models import PutMessagesDetails, PutMessagesDetailsEntry
-from .utils import get_console_logger, get_security_config_and_signer
+from .oci_queue_base import QueueBase
+from .utils import get_console_logger
 
 logger = get_console_logger()
 
 
-class QueuePublisher:
+class QueuePublisher(QueueBase):
     """
     A class to publish messages to an OCI outbound queue.
 
@@ -27,7 +27,11 @@ class QueuePublisher:
     """
 
     def __init__(
-        self, queue_ocid: str, service_endpoint: str, auth_type: str = "API_KEY"
+        self,
+        queue_ocid: str,
+        service_endpoint: str,
+        auth_type: str = "API_KEY",
+        **kwargs,
     ):
         """
         Initialize the QueuePublisher with the given OCI queue configuration.
@@ -39,22 +43,7 @@ class QueuePublisher:
                 - "API_KEY": Uses API key authentication (default).
                 - "INSTANCE_PRINCIPAL": Uses instance principal authentication.
         """
-        config, signer = get_security_config_and_signer(auth_type)
-
-        self.queue_ocid = queue_ocid
-        self.service_endpoint = service_endpoint
-
-        if config:
-            self.queue_client = QueueClient(
-                config=config, service_endpoint=self.service_endpoint
-            )
-        else:
-            self.queue_client = QueueClient(
-                config={},  # Empty config for instance principal
-                signer=signer,
-                service_endpoint=self.service_endpoint,
-            )
-
+        super().__init__(queue_ocid, service_endpoint, auth_type, **kwargs)
         logger.info("QueuePublisher initialized for queue OCID: %s", self.queue_ocid)
 
     def enqueue_message(self, payload: dict):
