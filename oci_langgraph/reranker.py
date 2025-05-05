@@ -85,6 +85,7 @@ class Reranker(AgentBase):
         self.top_k = top_k
 
         self.name = kwargs.get("name", "Reranker")
+        # this ensure that we have the right params for a reranker
         self.temperature = kwargs.get("temperature", 0.0)
         self.max_tokens = kwargs.get("max_tokens", 2048)
 
@@ -222,5 +223,7 @@ class Reranker(AgentBase):
     def set_reranker_template(self, reranker_template: str):
         """
         Set the reranker template.
+
+        Enable customization of the reranker prompt template.
         """
         self.reranker_template = reranker_template

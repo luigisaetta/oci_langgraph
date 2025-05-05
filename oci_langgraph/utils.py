@@ -96,7 +96,6 @@ def get_security_config_and_signer(auth_type):
 
         if DEBUG:
             logger.info("Queue client, using INSTANCE_PRINCIPAL...")
-            logger.debug("Config: %s", config)
             logger.debug("Signer: %s", signer)
     else:
         raise ValueError(

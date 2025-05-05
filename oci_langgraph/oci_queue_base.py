@@ -18,7 +18,6 @@ class QueueBase:
         queue_ocid: str,
         service_endpoint: str,
         auth_type: str = "API_KEY",
-        **kwargs,
     ):
         """
         Initialize the OCI Queue base class

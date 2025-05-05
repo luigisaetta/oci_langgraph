@@ -36,8 +36,7 @@ def get_llm(
     model_id,
     service_endpoint,
     compartment_id,
-    temperature=0.0,
-    max_tokens=2048,
+    **kwargs,
 ):
     """
     Initialize and return an instance of ChatOCIGenAI with the specified configuration.
@@ -45,6 +44,10 @@ def get_llm(
     Returns:
         ChatOCIGenAI: An instance of the OCI GenAI language model.
     """
+    # we can pass via kwargs
+    temperature = kwargs.get("temperature", 0.1)
+    max_tokens = kwargs.get("max_tokens", 2048)
+
     llm = ChatOCIGenAI(
         auth_type=auth_type,
         model_id=model_id,
