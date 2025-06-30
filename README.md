@@ -4,6 +4,7 @@ This repository will contain all the code for the oci_langraph package. A set of
 ## Features available
 * **Checkpointing** integrated with LangGraph
 * Integration with **OCI APM**
+* A reranker base on a LLM, highly configurable
 * Classes to simplify integration with **OCI Queue**
 
 ## Examples
